@@ -13,6 +13,47 @@ Yi-Ju Tseng
 
 ``` r
 #這是R Code Chunk
+library(readr)
+library(readxl)
+library(dplyr)
+```
+
+    ## 
+    ## Attaching package: 'dplyr'
+
+    ## The following objects are masked from 'package:stats':
+    ## 
+    ##     filter, lag
+
+    ## The following objects are masked from 'package:base':
+    ## 
+    ##     intersect, setdiff, setequal, union
+
+``` r
+library(ggplot2)
+library(ggmap)
+library(choroplethr)
+```
+
+    ## Loading required package: acs
+
+    ## Loading required package: stringr
+
+    ## Loading required package: XML
+
+    ## 
+    ## Attaching package: 'acs'
+
+    ## The following object is masked from 'package:dplyr':
+    ## 
+    ##     combine
+
+    ## The following object is masked from 'package:base':
+    ## 
+    ##     apply
+
+``` r
+library(choroplethrMaps)
 ```
 
 ### 哪些國家來台灣唸書的學生最多呢？
