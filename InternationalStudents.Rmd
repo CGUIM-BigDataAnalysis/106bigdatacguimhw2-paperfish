@@ -1,7 +1,7 @@
 ---
 title: "106-2 大數據分析方法 作業二"
 output: github_document
-author: Yi-Ju Tseng
+author: zhi-yu Xu
 ---
 
 作業完整說明[連結](https://docs.google.com/document/d/1aLGSsGXhgOVgwzSg9JdaNz2qGPQJSoupDAQownkGf_I/edit?usp=sharing)
@@ -15,18 +15,14 @@ author: Yi-Ju Tseng
 ```{r dataloadToTWN}
 #需載入之相關套件
 library(readr)
-library(readxl)
 library(dplyr)
-library(ggplot2)
-library(ggmap)
-library(choroplethr)
-library(choroplethrMaps)
+
 library(knitr)
---------------------------------------------------------------------------
-C103 <- read_csv("GitHub/106bigdatacguimhw2-paperfish/103_ab103_C.csv")
-C104 <- read_csv("GitHub/106bigdatacguimhw2-paperfish/104_ab104_C.csv")
-C105 <- read_csv("GitHub/106bigdatacguimhw2-paperfish/105_ab105_C.csv")
-C106 <- read_csv("GitHub/106bigdatacguimhw2-paperfish/106_ab105_C.csv")
+
+C103 <- read_csv("~/GitHub/106bigdatacguimhw2-paperfish/103_ab103_C.csv")
+C104 <- read_csv("~/GitHub/106bigdatacguimhw2-paperfish/104_ab104_C.csv")
+C105 <- read_csv("~/GitHub/106bigdatacguimhw2-paperfish/105_ab105_C.csv")
+C106 <- read_csv("~/GitHub/106bigdatacguimhw2-paperfish/106_ab105_C.csv")
 #新增一欄位將每一年度所有來台念書的學生作加總
 C103$total<-rowSums(C103[,3:11],na.rm = T)
 C104$total<-rowSums(C104[,3:11],na.rm = T)
@@ -43,11 +39,11 @@ CStudent<-merge(CStudent,
                 select(C106,"國別",total),
                 by = "國別",all=T)
 names(CStudent)<-c("國別","total103","total104","total105","total106")
---------------------------------------------------------------------------
-S103<- read_csv("GitHub/106bigdatacguimhw2-paperfish/103_ab103_S.csv")
-S104<- read_csv("GitHub/106bigdatacguimhw2-paperfish/104_ab104_S.csv")
-S105<- read_csv("GitHub/106bigdatacguimhw2-paperfish/105_ab105_S.csv")
-S106<- read_csv("GitHub/106bigdatacguimhw2-paperfish/106_ab105_S.csv")
+
+S103<- read_csv("~/GitHub/106bigdatacguimhw2-paperfish/103_ab103_S.csv")
+S104<- read_csv("~/GitHub/106bigdatacguimhw2-paperfish/104_ab104_S.csv")
+S105<- read_csv("~/GitHub/106bigdatacguimhw2-paperfish/105_ab105_S.csv")
+S106<- read_csv("~/GitHub/106bigdatacguimhw2-paperfish/106_ab105_S.csv")
 #將`非學位生-大陸研修生`此欄位轉成數值，並將不是數值的東西轉成NA
 S103$`非學位生-大陸研修生`<-as.numeric(gsub("…",NA,S103$`非學位生-大陸研修生`))
 S104$`非學位生-大陸研修生`<-as.numeric(gsub("…",NA,S104$`非學位生-大陸研修生`))
@@ -67,21 +63,23 @@ SStudent<-merge(SStudent,
                 select(S106,"學校名稱",total),
                 by = "學校名稱")
 names(SStudent)<-c("學校名稱","total103","total104","total105","total106")
---------------------------------------------------------------------------
-Compare <- read_csv("GitHub/106bigdatacguimhw2-paperfish/CountriesComparisionTable.csv")
+
+Compare <- read_csv("~/GitHub/106bigdatacguimhw2-paperfish/CountriesComparisionTable.csv")
 names(Compare)<-c("ISO3","English","國別")
 ```
 
 ### 哪些國家來台灣唸書的學生最多呢？ 
 ```{r ToTWNCountry}
 #新增一欄位"總人數"將每一年度的和做加總，為103-106年度為止來台念書的總人數，並從多到少排序
+library(dplyr)
 CStudent<-CStudent%>%
   mutate(總人數 =rowSums(CStudent[,2:5]))%>%
   select(國別,總人數)%>%
   arrange(desc(總人數))
 
 CStudent10<-head(CStudent,10)
-
+CStudent10$國別 <- factor(CStudent10$國別, 
+                        levels = CStudent10$國別[order(CStudent10$總人數)])
 kable(CStudent10)
 ```
 
@@ -93,33 +91,46 @@ SStudent<-SStudent%>%
   select(學校名稱,總人數)%>%
   arrange(desc(總人數))
 
-SStudent10<-head(SStudent,10)
-
-kable(SStudent10)
+kable(head(SStudent,10))
 ```
+
 依上表所呈現，境外生較多的學校也並非一定是國立大學較多，選擇私立大學的境外生也不少，而國立大學之中以國立臺灣師範大學為最多境外生所選擇，私立大學則是中國文化大學。
 ### 各個國家來台灣唸書的學生人數條狀圖
 ```{r ToTWNCountryBar}
+library(ggplot2)
+library(ggthemes)
 ggplot()+
   geom_bar(data=CStudent10,
-           aes(x=國別,y=總人數),
+           aes(x=國別,y=總人數,fill = 國別),
            stat = "identity") +
+  labs(title = "各個國家來台灣唸書的學生人數")+
+  geom_label(position = position_stack(vjust = 0.5),
+             size = 2.3,
+             colour = 'black')+
+  guides(fill = F)+
+  theme_economist()+
   theme(axis.text.x = element_text(angle = 90, hjust = 1,vjust = 0.5))
 ```
+
 依上表所呈現，中國大陸為來台念書學生最多的國家，可能推翻「陸生拒來台念大學」此一說法，而馬來西亞成為第二多之國家，原因可能為政府推行新南進政策。
+
 ### 各個國家來台灣唸書的學生人數面量圖
 ```{r ToTWNCountryMap}
+library(choroplethr)
 CCompare<-merge(CStudent,Compare,by = "國別")
 df = data.frame(region=CCompare$English, value=CCompare$總人數)
 df<-df[!duplicated(df$region), ]
-country_choropleth(df,num_colors = 9)
+country_choropleth(df)+ 
+  scale_fill_brewer(name="總人數", palette=4, na.value="white")
 ```
 
 ## 台灣學生國際交流分析
 
 ### 資料匯入與處理
 ```{r dataloadFromTWN}
-TWstudent<- read_excel("GitHub/106bigdatacguimhw2-paperfish/Student_RPT_07.xlsx")
+library(readxl)
+library(dplyr)
+TWstudent<- read_excel("~/GitHub/106bigdatacguimhw2-paperfish/Student_RPT_07.xlsx")
 ```
 
 ### 台灣大專院校的學生最喜歡去哪些國家進修交流呢？
@@ -130,8 +141,7 @@ TCstudent<-TWstudent%>%
   summarise(總人數=sum(小計))%>%
   arrange(desc(總人數))
 
-TCstudent10<-head(TCstudent,10)
-kable(TCstudent10)
+kable(head(TCstudent,10))
 ```
 
 ### 哪間大學的出國交流學生數最多呢？
@@ -143,31 +153,46 @@ TSstudent<-TWstudent%>%
   arrange(desc(總人數))
 
 TSstudent10<-head(TSstudent,10)
+TSstudent10$學校名稱 <- factor(TSstudent10$學校名稱,
+                           levels =TSstudent10$學校名稱[order(TSstudent10$總人數)])
+
 kable(TSstudent10)
 ```
+
 依上表所呈現，國立臺灣大學的出國交流學生數最多，可能成績越好的學生可能比較會利用學校的資源來增加到國外交流的經驗，可能也會外語能力比較好的學生也會比較想到國外去測試自己的實力如何。
+
 ### 台灣大專院校的學生最喜歡去哪些國家進修交流條狀圖
 ```{r FromTWNCountryBar}
-ggplot()+geom_bar(data=TSstudent10,
-                  aes(x=學校名稱,y=總人數),
+ggplot()+
+  geom_bar(data=TSstudent10,
+                  aes(x=學校名稱,y=總人數,fill =學校名稱),
                   stat = "identity")+
+  labs(title = "各個台灣大專院校去各國家進修交流人數")+
+  geom_label(position = position_stack(vjust = 0.5),
+             size = 2.3,
+             colour = 'black')+
+  guides(fill = F)+
+  theme_economist()+
   theme(axis.text.x = element_text(angle = 90, hjust = 1,vjust = 0.5))
 ```
+
 依上表所呈現，中國大陸為台灣大專院校的學生最喜歡去的國家，證實根據北京清華大學的統計指出，近三年來，台生申請人數不斷翻倍成長，原因為學費便宜、獎學金豐富、打算到中國工作、港澳台優惠政策更有機會唸到好大學、國際排名高、語言相通，而日本美國也是常年學生票選最愛去國家的榜上名單。
+
 ### 台灣大專院校的學生最喜歡去哪些國家進修交流面量圖
 ```{r FromTWNCountryMap}
 names(TCstudent)<-c("國別","總人數")
 TCompare<-merge(TCstudent,Compare,by = "國別")
 df = data.frame(region=TCompare$English, value=TCompare$總人數)
 df<-df[!duplicated(df$region), ]
-country_choropleth(df,num_colors = 9)
+country_choropleth(df)+ 
+  scale_fill_brewer(name="總人數", palette=4, na.value="white")
 ```
 
 ## 台灣學生出國留學分析
 
 ### 資料匯入與處理
 ```{r dataloadFromTWNAb}
-twc<- read_csv("GitHub/106bigdatacguimhw2-paperfish/105fuck.csv")
+twc<- read_csv("~/GitHub/106bigdatacguimhw2-paperfish/105fuck.csv")
 twc[,4:6]<-NULL
 ```
 
@@ -177,8 +202,7 @@ twc<-twc%>%
   select("國別","總人數")%>%
   arrange(desc(總人數))
 
-twc10<-head(twc,10)
-kable(twc10)
+kable(head(twc,10))
 ```
 
 ### 台灣學生最喜歡去哪些國家留學面量圖
@@ -186,13 +210,20 @@ kable(twc10)
 TwcCompare<-merge(twc,Compare,by = "國別")
 df = data.frame(region=TwcCompare$English, value=TwcCompare$總人數)
 df<-df[!duplicated(df$region), ]
-country_choropleth(df,num_colors = 9)
+country_choropleth(df)+ 
+  scale_fill_brewer(name="總人數", palette=4, na.value="white")
 ```
+
 大部分台灣學生喜歡去的國家多為歐美國家，就像是東方人對西方世界的一種憧憬一樣，而澳大利亞擠身為第二名，也可能是因為西方文化再加上在澳洲打工賺很多一說，也可能成為許多人夢想留學的國家。
+
 ## 綜合分析
 
-請問來台讀書與離台讀書的來源國與留學國趨勢是否相同(5分)？想來台灣唸書的境外生，他們的母國也有很多台籍生嗎？請圖文並茂說明你的觀察(10分)。
+請問來台讀書與離台讀書的來源國與留學國趨勢是否相同(5分)？
+
+想來台灣唸書的境外生，他們的母國也有很多台籍生嗎？請圖文並茂說明你的觀察(10分)。
+
 ```{r Trend}
+library(ggplot2)
 names(CStudent)<-c("國別","來源國人數")
 names(TCstudent)<-c("國別","留學國人數")
 a<-merge(CStudent,TCstudent,by = "國別")
@@ -205,4 +236,7 @@ ggplot(a,
            color=國別)) + 
   geom_point()
 ```
+
 除了中國大陸以外的國家，均沒有明顯趨勢來證明來源國與留學國為正相關或負相關，但有些許國家為來源國明顯大於留學國人數，也有些許國家為留學國明顯大於來源國人數。
+
+依散布圖來看，似乎離台灣本島較近的國家，像是中國大陸、日本、南韓...，這些國家會偏向台灣去該國留學的人數比較多。

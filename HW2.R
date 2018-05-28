@@ -6,10 +6,10 @@ library(ggmap)
 library(choroplethr)
 library(choroplethrMaps)
 
-C103 <- read_csv("GitHub/106bigdatacguimhw2-paperfish/103_ab103_C.csv")
-C104 <- read_csv("GitHub/106bigdatacguimhw2-paperfish/104_ab104_C.csv")
-C105 <- read_csv("GitHub/106bigdatacguimhw2-paperfish/105_ab105_C.csv")
-C106 <- read_csv("GitHub/106bigdatacguimhw2-paperfish/106_ab105_C.csv")
+C103 <- read_csv("~/GitHub/106bigdatacguimhw2-paperfish/103_ab103_C.csv")
+C104 <- read_csv("~/GitHub/106bigdatacguimhw2-paperfish/104_ab104_C.csv")
+C105 <- read_csv("~/GitHub/106bigdatacguimhw2-paperfish/105_ab105_C.csv")
+C106 <- read_csv("~/GitHub/106bigdatacguimhw2-paperfish/106_ab105_C.csv")
 
 #1.請問哪些國家來台灣唸書的學生最多呢？請取出前十名的國家與總人數，由大到小排序(5分)。
 
@@ -35,12 +35,15 @@ CStudent<-CStudent%>%
   arrange(desc(總人數))
 
 CStudent10<-head(CStudent,10)
+CStudent10$國別 <- factor(CStudent10$國別, 
+                        levels = CStudent10$國別[order(CStudent10$總人數)])
+
 
 #又哪間大學的境外生最多呢？請取出前十名的大學與總人數，由大到小排序(5分)。
-S103<- read_csv("GitHub/106bigdatacguimhw2-paperfish/103_ab103_S.csv")
-S104<- read_csv("GitHub/106bigdatacguimhw2-paperfish/104_ab104_S.csv")
-S105<- read_csv("GitHub/106bigdatacguimhw2-paperfish/105_ab105_S.csv")
-S106<- read_csv("GitHub/106bigdatacguimhw2-paperfish/106_ab105_S.csv")
+S103<- read_csv("~/GitHub/106bigdatacguimhw2-paperfish/103_ab103_S.csv")
+S104<- read_csv("~/GitHub/106bigdatacguimhw2-paperfish/104_ab104_S.csv")
+S105<- read_csv("~/GitHub/106bigdatacguimhw2-paperfish/105_ab105_S.csv")
+S106<- read_csv("~/GitHub/106bigdatacguimhw2-paperfish/106_ab105_S.csv")
 
 S103$`非學位生-大陸研修生`<-as.numeric(gsub("…",NA,S103$`非學位生-大陸研修生`))
 S104$`非學位生-大陸研修生`<-as.numeric(gsub("…",NA,S104$`非學位生-大陸研修生`))
@@ -70,28 +73,35 @@ SStudent<-SStudent%>%
 SStudent10<-head(SStudent,10)
 
 #承1，請用bar chart呈現各個國家(全部)來台灣唸書的學生人數(10分)。
-
+library(ggthemes)
 ggplot()+
   geom_bar(data=CStudent10,
-                  aes(x=國別,y=總人數),
-                  stat = "identity") +
+           aes(x=國別,y=總人數,fill = 國別),
+           stat = "identity") +
+  labs(title = "各個國家來台灣唸書的學生人數")+
+  geom_label(position = position_stack(vjust = 0.5),
+             size = 2.3,
+             colour = 'black')+
+  guides(fill = F)+
+  theme_economist()+
   theme(axis.text.x = element_text(angle = 90, hjust = 1,vjust = 0.5))
 
 #承1，請用面量圖呈現各個國家來台灣唸書的學生人數，人數越多顏色越深(10分)。
 
 
-Compare <- read_csv("GitHub/106bigdatacguimhw2-paperfish/CountriesComparisionTable.csv")
+Compare <- read_csv("~/GitHub/106bigdatacguimhw2-paperfish/CountriesComparisionTable.csv")
 names(Compare)<-c("ISO3","English","國別")
 
 CCompare<-merge(CStudent,Compare,by = "國別")
 df = data.frame(region=CCompare$English, value=CCompare$總人數)
 df<-df[!duplicated(df$region), ]
-country_choropleth(df,num_colors = 9)
+country_choropleth(df)+ 
+  scale_fill_brewer(name="總人數", palette=4, na.value="white")
 
 
 #4.台灣大專院校的學生最喜歡去哪些國家進修交流呢？請取出前十名的國家與總人數，由大到小排序(5分)。
 
-TWstudent<- read_excel("GitHub/106bigdatacguimhw2-paperfish/Student_RPT_07.xlsx")
+TWstudent<- read_excel("~/GitHub/106bigdatacguimhw2-paperfish/Student_RPT_07.xlsx")
 TCstudent<-TWstudent%>%
   filter(學年度>=103)%>%
   group_by(`對方學校(機構)國別(地區)`)%>%
@@ -108,11 +118,21 @@ TSstudent<-TWstudent%>%
   arrange(desc(總人數))
 
 TSstudent10<-head(TSstudent,10)
+TSstudent10$學校名稱 <- factor(TSstudent10$學校名稱, 
+                           levels = TSstudent10$學校名稱[order(TSstudent10$總人數)])
+
 
 #承4，請用bar chart呈現台灣大專院校(全部)的學生去各國家進修交流人數(10分)。
-ggplot()+geom_bar(data=TSstudent10,
-                  aes(x=學校名稱,y=總人數),
+ggplot()+
+  geom_bar(data=TSstudent10,
+                  aes(x=學校名稱,y=總人數,fill =學校名稱),
                   stat = "identity")+
+  labs(title = "各個台灣大專院校去各國家進修交流人數")+
+  geom_label(position = position_stack(vjust = 0.5),
+             size = 2.3,
+             colour = 'black')+
+  guides(fill = F)+
+  theme_economist()+
   theme(axis.text.x = element_text(angle = 90, hjust = 1,vjust = 0.5))
 
 #承4，請用面量圖呈現台灣大專院校的學生去各國家進修交流人數，人數越多顏色越深(10分)。
@@ -120,11 +140,12 @@ names(TCstudent)<-c("國別","總人數")
 TCompare<-merge(TCstudent,Compare,by = "國別")
 df = data.frame(region=TCompare$English, value=TCompare$總人數)
 df<-df[!duplicated(df$region), ]
-country_choropleth(df,num_colors = 9)
+country_choropleth(df)+ 
+  scale_fill_brewer(name="總人數", palette=4, na.value="white")
 
 #台灣學生最喜歡去哪些國家留學呢？請取出前十名的國家與總人數，由大到小排序(5分)。
 
-twc<- read_csv("GitHub/106bigdatacguimhw2-paperfish/105fuck.csv")
+twc<- read_csv("~/GitHub/106bigdatacguimhw2-paperfish/105fuck.csv")
 twc[,4:6]<-NULL
 twc<-twc%>%
   select("國別","總人數")%>%
@@ -137,8 +158,8 @@ twc10<-head(twc,10)
 TwcCompare<-merge(twc,Compare,by = "國別")
 df = data.frame(region=TwcCompare$English, value=TwcCompare$總人數)
 df<-df[!duplicated(df$region), ]
-country_choropleth(df,num_colors = 9)
-?country_choropleth
+country_choropleth(df)+ 
+  scale_fill_brewer(name="總人數", palette=4, na.value="white")
 
 #請問來台讀書與離台讀書的來源國與留學國趨勢是否相同(5分)？
 names(CStudent)<-c("國別","來源國人數")
